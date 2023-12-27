@@ -29,3 +29,5 @@ tmp/
 **/*.html
 **/*.json
 **/*.md
+
+plugins/styleguide/assets/javascripts/discourse/components/sections/mocks/*
