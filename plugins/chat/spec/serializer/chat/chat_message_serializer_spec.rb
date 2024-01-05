@@ -228,6 +228,46 @@ describe Chat::MessageSerializer do
       expect { serializer.as_json }.not_to raise_error
       expect(serializer.as_json[:mentioned_users]).to be_empty
     end
+
+    context "with user status" do
+      it "adds status to mentioned users when status is enabled" do
+        SiteSetting.enable_user_status = true
+        user_status = Fabricate(:user_status)
+        mentioned_user = Fabricate(:user, user_status: user_status)
+        message =
+          Fabricate(
+            :chat_message,
+            message:
+              "there should be a mention here, but since we're fabricating objects it doesn't matter",
+          )
+        Fabricate(:chat_mention, chat_message: message, user: mentioned_user)
+
+        serializer = described_class.new(message, scope: guardian, root: nil)
+        json = serializer.as_json
+
+        expect(json[:mentioned_users][0][:status]).not_to be_nil
+        expect(json[:mentioned_users][0][:status][:description]).to eq(user_status.description)
+        expect(json[:mentioned_users][0][:status][:emoji]).to eq(user_status.emoji)
+      end
+
+      it "does not add status to mentioned users when status is enabled" do
+        SiteSetting.enable_user_status = false
+        user_status = Fabricate(:user_status)
+        mentioned_user = Fabricate(:user, user_status: user_status)
+        message =
+          Fabricate(
+            :chat_message,
+            message:
+              "there should be a mention here, but since we're fabricating objects it doesn't matter",
+          )
+        Fabricate(:chat_mention, chat_message: message, user: mentioned_user)
+
+        serializer = described_class.new(message, scope: guardian, root: nil)
+        json = serializer.as_json
+
+        expect(json[:mentioned_users][0][:status]).to be_nil
+      end
+    end
   end
 
   describe "threading data" do
