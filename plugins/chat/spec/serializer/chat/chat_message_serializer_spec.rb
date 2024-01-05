@@ -55,6 +55,13 @@ describe Chat::MessageSerializer do
     end
 
     context "with user status" do
+      it "adds status to user if status is enabled" do
+        message_1.user.set_status!("test", "heart")
+        SiteSetting.enable_user_status = true
+        json = serializer.as_json
+        expect(json[:user][:status]).to be_present
+      end
+
       it "does not add status to user if status is disabled" do
         SiteSetting.enable_user_status = false
         json = serializer.as_json
