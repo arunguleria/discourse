@@ -230,17 +230,19 @@ describe Chat::MessageSerializer do
     end
 
     context "with user status" do
+      fab!(:user_status) { Fabricate(:user_status) }
+      fab!(:mentioned_user) { Fabricate(:user, user_status: user_status) }
+      fab!(:message) do
+        Fabricate(
+          :chat_message,
+          message:
+            "there should be a mention here, but since we're fabricating objects it doesn't matter",
+        )
+      end
+      fab!(:chat_mention) { Fabricate(:chat_mention, chat_message: message, user: mentioned_user) }
+
       it "adds status to mentioned users when status is enabled" do
         SiteSetting.enable_user_status = true
-        user_status = Fabricate(:user_status)
-        mentioned_user = Fabricate(:user, user_status: user_status)
-        message =
-          Fabricate(
-            :chat_message,
-            message:
-              "there should be a mention here, but since we're fabricating objects it doesn't matter",
-          )
-        Fabricate(:chat_mention, chat_message: message, user: mentioned_user)
 
         serializer = described_class.new(message, scope: guardian, root: nil)
         json = serializer.as_json
@@ -252,15 +254,6 @@ describe Chat::MessageSerializer do
 
       it "does not add status to mentioned users when status is enabled" do
         SiteSetting.enable_user_status = false
-        user_status = Fabricate(:user_status)
-        mentioned_user = Fabricate(:user, user_status: user_status)
-        message =
-          Fabricate(
-            :chat_message,
-            message:
-              "there should be a mention here, but since we're fabricating objects it doesn't matter",
-          )
-        Fabricate(:chat_mention, chat_message: message, user: mentioned_user)
 
         serializer = described_class.new(message, scope: guardian, root: nil)
         json = serializer.as_json
