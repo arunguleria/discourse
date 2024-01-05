@@ -21,7 +21,7 @@ module Chat
         .map(&:user)
         .compact
         .sort_by(&:id)
-        .map { |user| BasicUserSerializer.new(user, root: false, include_status: true) }
+        .map { |user| BasicUserSerializer.new(user, root: false, include_status: false) }
         .as_json
     end
 
