@@ -53,6 +53,14 @@ describe Chat::MessageSerializer do
         expect(serializer.as_json[:user][:username]).to eq(I18n.t("chat.deleted_chat_username"))
       end
     end
+
+    context "with user status" do
+      it "does not add status to user if status is disabled" do
+        SiteSetting.enable_user_status = false
+        json = serializer.as_json
+        expect(json[:user][:status]).to be_nil
+      end
+    end
   end
 
   describe "#deleted_at" do
