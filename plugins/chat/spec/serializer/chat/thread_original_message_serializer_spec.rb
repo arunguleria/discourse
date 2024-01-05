@@ -4,25 +4,32 @@ require "rails_helper"
 
 RSpec.describe Chat::ThreadOriginalMessageSerializer do
   context "with mentions" do
-    fab!(:message) { Fabricate(:message) }
+    fab!(:user_status) { Fabricate(:user_status) }
+    fab!(:mentioned_user) { Fabricate(:user, user_status: user_status) }
+    fab!(:message) do
+      Fabricate(
+        :chat_message,
+        message:
+          "there should be a mention here, but since we're fabricating objects it doesn't matter",
+      )
+    end
+    fab!(:chat_mention) { Fabricate(:chat_mention, chat_message: message, user: mentioned_user) }
+
+    subject(:serializer) { described_class.new(message, root: nil) }
 
     it "adds status to mentioned users if status is enabled" do
       SiteSetting.enable_user_status = true
 
-      serializer = described_class.new(message)
       json = serializer.as_json
 
       expect(json[:mentioned_users][0][:status]).to be_present
-      expect(json[:mentioned_users][0][:status][:description]).to eq("test")
-      expect(json[:mentioned_users][0][:status][:emoji]).to eq("test")
+      expect(json[:mentioned_users][0][:status][:description]).to eq(user_status.description)
+      expect(json[:mentioned_users][0][:status][:emoji]).to eq(user_status.emoji)
     end
 
     it "does not add status to mentioned users if status is disabled" do
       SiteSetting.enable_user_status = false
-
-      serializer = described_class.new(message)
       json = serializer.as_json
-
       expect(json[:mentioned_users][0][:status]).to be_nil
     end
   end
