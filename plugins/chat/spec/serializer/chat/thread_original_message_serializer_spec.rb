@@ -3,6 +3,30 @@
 require "rails_helper"
 
 RSpec.describe Chat::ThreadOriginalMessageSerializer do
+  describe "#user" do
+    fab!(:user_status) { Fabricate(:user_status) }
+    fab!(:user) { Fabricate(:user, user_status: user_status) }
+    fab!(:message) { Fabricate(:chat_message, user: user, message: "Hi there") }
+
+    subject(:serializer) { described_class.new(message, root: nil) }
+
+    it "adds status to user if status is enabled" do
+      SiteSetting.enable_user_status = true
+
+      json = serializer.as_json
+
+      expect(json[:user][:status]).to be_present
+      expect(json[:user][:status][:description]).to eq(user_status.description)
+      expect(json[:user][:status][:emoji]).to eq(user_status.emoji)
+    end
+
+    it "does not add status user if status is disabled" do
+      SiteSetting.enable_user_status = false
+      json = serializer.as_json
+      expect(json[:user][:status]).to be_nil
+    end
+  end
+
   context "with mentions" do
     fab!(:user_status) { Fabricate(:user_status) }
     fab!(:mentioned_user) { Fabricate(:user, user_status: user_status) }
